@@ -7,7 +7,7 @@
 #   Slave:  curl -fsSL https://get.privum.cloud/dns | sudo bash -s -- --slave --master-ip=<IP> --token=<TOKEN>
 #
 # Project: https://gitlab.com/privum_public/dns_manager
-# License: MIT
+# License: AGPL-3.0-or-later
 # Version: 2.0.0
 #===============================================================================
 

@@ -7,6 +7,9 @@ and running rndc reconfig.
 
 On startup, performs full reconciliation by fetching the current zone list
 from the master so a slave that was offline still converges.
+
+Copyright (C) 2024-2026 PRIVUM
+SPDX-License-Identifier: AGPL-3.0-or-later
 """
 import logging
 import os
