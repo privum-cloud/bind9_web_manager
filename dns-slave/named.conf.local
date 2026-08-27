@@ -1,0 +1,71 @@
+// BIND9 Local Configuration - DNS Slave
+// Zone definitions for slave DNS server
+
+// Include RNDC key for remote control
+include "/etc/bind/rndc.key";
+
+// RNDC Controls - allows local management
+controls {
+    inet 127.0.0.1 port 953 allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+// ACL for master server
+acl "masters-acl" {
+    172.25.0.10;  // dns-master IP fixo
+};
+
+// Primaries definition (BIND 9.16+)
+primaries dns-master-list {
+    172.25.0.10;  // dns-master IP fixo
+};
+
+// ============================================
+// ZONE DEFINITIONS (SLAVE)
+// ============================================
+
+// Example zone - slave copy
+zone "example.com" {
+    type slave;
+    file "/etc/bind/zones/db.example.com";
+    masterfile-format text;
+    primaries { 172.25.0.10; };
+    allow-notify { masters-acl; };
+};
+
+// Reverse DNS zone for Docker network
+zone "20.172.in-addr.arpa" {
+    type slave;
+    file "/etc/bind/zones/db.172.20";
+    masterfile-format text;
+    primaries { 172.25.0.10; };
+    allow-notify { masters-acl; };
+};
+
+// Zona teste.local
+zone "teste.local" {
+    type slave;
+    file "/etc/bind/zones/db.teste.local";
+    masterfile-format text;
+    primaries { 172.25.0.10; };
+    allow-notify { masters-acl; };
+};
+
+// Zona meuprojeto.dev
+zone "meuprojeto.dev" {
+    type slave;
+    file "/etc/bind/zones/db.meuprojeto.dev";
+    masterfile-format text;
+    primaries { 172.25.0.10; };
+    allow-notify { masters-acl; };
+};
+
+// ============================================
+// TEMPLATE PARA NOVAS ZONAS SLAVE
+// ============================================
+// zone "yourdomain.com" {
+//     type slave;
+//     file "/etc/bind/zones/db.yourdomain.com";
+//     masterfile-format text;
+//     primaries { 172.25.0.10; };
+//     allow-notify { masters-acl; };
+// };

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Audit Logs</h1>
+        <p>System action history</p>
+    </div>
+    <div class="page-header-right">
+        <button class="btn" onclick="exportLogs()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card filters-card">
+    <div class="filters-row">
+        <div class="filter-group">
+            <div class="form-group">
+                <label>Period</label>
+                <div class="date-range">
+                    <input type="date" id="dateFrom" class="form-control">
+                    <span>to</span>
+                    <input type="date" id="dateTo" class="form-control">
+                </div>
+            </div>
+        </div>
+        <div class="filter-group">
+            <div class="form-group">
+                <label>User</label>
+                <select id="filterUser" class="form-select">
+                    <option value="">All</option>
+                    <option value="admin">admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Action</label>
+                <select id="filterAction" class="form-select">
+                    <option value="">All</option>
+                    <option value="CREATE">Create</option>
+                    <option value="UPDATE">Update</option>
+                    <option value="DELETE">Delete</option>
+                    <option value="LOGIN">Login</option>
+                    <option value="LOGOUT">Logout</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="filterType" class="form-select">
+                    <option value="">All</option>
+                    <option value="zone">Zone</option>
+                    <option value="record">Record</option>
+                    <option value="user">User</option>
+                    <option value="backup">Backup</option>
+                    <option value="auth">Authentication</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="applyFilters()">Filter</button>
+    </div>
+</div>
+
+<!-- Audit Logs -->
+<div class="card">
+    <div class="card-body">
+        <div class="audit-timeline">
+            {% for log in logs %}
+            <div class="audit-item" data-action="{{ log.action }}" data-type="{{ log.target_type }}">
+                <div class="audit-icon {{ log.action|lower }}">
+                    {% if log.action == 'CREATE' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    {% elif log.action == 'UPDATE' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    {% elif log.action == 'DELETE' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    {% elif log.action == 'LOGIN' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="audit-content">
+                    <div class="audit-header">
+                        <span class="audit-action badge badge-{{ log.action|lower }}">{{ log.action }}</span>
+                        <span class="audit-target">{{ log.target_type }}: <strong>{{ log.target_name }}</strong></span>
+                    </div>
+                    <div class="audit-details">{{ log.details }}</div>
+                    <div class="audit-meta">
+                        <span class="audit-user">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            {{ log.user }}
+                        </span>
+                        <span class="audit-time">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            {{ log.timestamp }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not logs %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <h3>No logs found</h3>
+            <p>There are no audit records for the selected filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    <button class="btn btn-sm" disabled>&laquo; Previous</button>
+    <span class="page-info">Page 1 of 1</span>
+    <button class="btn btn-sm" disabled>Next &raquo;</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applyFilters() {
+    const params = new URLSearchParams();
+
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const user = document.getElementById('filterUser').value;
+    const action = document.getElementById('filterAction').value;
+    const type = document.getElementById('filterType').value;
+
+    if (dateFrom) params.append('from', dateFrom);
+    if (dateTo) params.append('to', dateTo);
+    if (user) params.append('user', user);
+    if (action) params.append('action', action);
+    if (type) params.append('type', type);
+
+    window.location.href = '/audit?' + params.toString();
+}
+
+function exportLogs() {
+    const params = new URLSearchParams(window.location.search);
+    params.append('format', 'csv');
+    window.location.href = '/audit/export?' + params.toString();
+}
+
+// Set default date range (last 7 days)
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+    document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+});
+</script>
+{% endblock %}

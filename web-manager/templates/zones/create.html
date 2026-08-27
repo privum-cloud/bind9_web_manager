@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}New DNS Zone{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('zones.list') }}" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back
+        </a>
+        <h1>New DNS Zone</h1>
+    </div>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('zones.create') }}" class="zone-form">
+        {{ form.hidden_tag() if form else '' }}
+
+        <div class="card-body">
+            <div class="form-section">
+                <h3>Basic Information</h3>
+
+                <div class="form-group">
+                    <label for="zoneName">Zone Name *</label>
+                    <input type="text" id="zoneName" name="name" class="form-control"
+                           placeholder="example.com" required pattern="[a-zA-Z0-9.-]+">
+                    <span class="form-hint">Domain name (e.g., example.com, sub.example.com)</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="zoneType">Zone Type *</label>
+                        <select id="zoneType" name="type" class="form-select" required onchange="toggleMasterIP()">
+                            <option value="master">Master (Primary)</option>
+                            <option value="slave">Slave (Secondary)</option>
+                            <option value="forward">Forward</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="masterIPGroup" style="display: none;">
+                        <label for="masterIP">Master IP *</label>
+                        <input type="text" id="masterIP" name="master_ip" class="form-control"
+                               placeholder="192.168.1.1">
+                        <span class="form-hint">IP of master DNS server (for slave/forward only)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section" id="soaSection">
+                <h3>SOA Settings</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="primaryNS">Primary Server (NS) *</label>
+                        <input type="text" id="primaryNS" name="primary_ns" class="form-control"
+                               placeholder="ns1.example.com." required>
+                        <span class="form-hint">FQDN of primary nameserver (must end with dot)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmail">Admin Email *</label>
+                        <input type="text" id="adminEmail" name="admin_email" class="form-control"
+                               placeholder="admin.example.com." required>
+                        <span class="form-hint">Email in DNS format (@ replaced with dot)</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ttl">Default TTL</label>
+                        <select id="ttl" name="ttl" class="form-select">
+                            <option value="300">5 minutes (300)</option>
+                            <option value="900">15 minutes (900)</option>
+                            <option value="1800">30 minutes (1800)</option>
+                            <option value="3600" selected>1 hour (3600)</option>
+                            <option value="7200">2 hours (7200)</option>
+                            <option value="14400">4 hours (14400)</option>
+                            <option value="86400">1 day (86400)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="refresh">Refresh</label>
+                        <input type="number" id="refresh" name="refresh" class="form-control"
+                               value="7200" min="60">
+                        <span class="form-hint">Seconds (default: 7200)</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="retry">Retry</label>
+                        <input type="number" id="retry" name="retry" class="form-control"
+                               value="3600" min="60">
+                        <span class="form-hint">Seconds (default: 3600)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="expire">Expire</label>
+                        <input type="number" id="expire" name="expire" class="form-control"
+                               value="1209600" min="60">
+                        <span class="form-hint">Seconds (default: 1209600)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="minimum">Negative Cache TTL (Minimum)</label>
+                    <input type="number" id="minimum" name="minimum" class="form-control"
+                           value="3600" min="60">
+                    <span class="form-hint">Seconds (default: 3600)</span>
+                </div>
+            </div>
+
+            <div class="form-section" id="initialRecords">
+                <h3>Initial Records (Optional)</h3>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="add_ns" checked>
+                        <span>Add default NS records</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="add_www">
+                        <span>Add www record (A)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="add_mail">
+                        <span>Add email records (MX + A)</span>
+                    </label>
+                </div>
+
+                <div class="form-group" id="wwwIPGroup" style="display: none;">
+                    <label for="wwwIP">IP for www</label>
+                    <input type="text" id="wwwIP" name="www_ip" class="form-control"
+                           placeholder="192.168.1.100">
+                </div>
+
+                <div class="form-group" id="mailIPGroup" style="display: none;">
+                    <label for="mailIP">IP for mail</label>
+                    <input type="text" id="mailIP" name="mail_ip" class="form-control"
+                           placeholder="192.168.1.101">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a href="{{ url_for('zones.list') }}" class="btn">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Zone</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleMasterIP() {
+    const zoneType = document.getElementById('zoneType').value;
+    const masterIPGroup = document.getElementById('masterIPGroup');
+    const soaSection = document.getElementById('soaSection');
+    const initialRecords = document.getElementById('initialRecords');
+
+    if (zoneType === 'slave' || zoneType === 'forward') {
+        masterIPGroup.style.display = 'block';
+        document.getElementById('masterIP').required = true;
+        soaSection.style.display = 'none';
+        initialRecords.style.display = 'none';
+    } else {
+        masterIPGroup.style.display = 'none';
+        document.getElementById('masterIP').required = false;
+        soaSection.style.display = 'block';
+        initialRecords.style.display = 'block';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle www IP field
+    document.querySelector('input[name="add_www"]').addEventListener('change', function() {
+        document.getElementById('wwwIPGroup').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Toggle mail IP field
+    document.querySelector('input[name="add_mail"]').addEventListener('change', function() {
+        document.getElementById('mailIPGroup').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Auto-complete admin email based on zone name
+    document.getElementById('zoneName').addEventListener('blur', function() {
+        const zoneName = this.value;
+        const adminEmail = document.getElementById('adminEmail');
+        const primaryNS = document.getElementById('primaryNS');
+
+        if (zoneName && !adminEmail.value) {
+            adminEmail.value = 'admin.' + zoneName + '.';
+        }
+        if (zoneName && !primaryNS.value) {
+            primaryNS.value = 'ns1.' + zoneName + '.';
+        }
+    });
+});
+</script>
+{% endblock %}

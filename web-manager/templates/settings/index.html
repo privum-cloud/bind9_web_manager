@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Settings</h1>
+        <p>General system settings</p>
+    </div>
+</div>
+
+<div class="settings-grid">
+    <!-- System Info -->
+    <div class="card">
+        <div class="card-header">
+            <h3>System Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Version</span>
+                    <span class="info-value">{{ settings.version }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">DNS Master</span>
+                    <span class="info-value"><code>{{ settings.dns_master }}</code></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">DNS Slave</span>
+                    <span class="info-value"><code>{{ settings.dns_slave }}</code></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Zones Directory</span>
+                    <span class="info-value"><code>{{ settings.zones_path }}</code></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Backup Directory</span>
+                    <span class="info-value"><code>{{ settings.backup_path }}</code></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DNS Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3>DNS Settings</h3>
+        </div>
+        <form id="dnsSettingsForm" onsubmit="saveDNSSettings(event)">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="defaultTTL">Default TTL</label>
+                    <select id="defaultTTL" name="default_ttl" class="form-select">
+                        <option value="300">5 minutes (300)</option>
+                        <option value="900">15 minutes (900)</option>
+                        <option value="1800">30 minutes (1800)</option>
+                        <option value="3600" selected>1 hour (3600)</option>
+                        <option value="7200">2 hours (7200)</option>
+                        <option value="14400">4 hours (14400)</option>
+                        <option value="86400">1 day (86400)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultRefresh">Default Refresh (seconds)</label>
+                    <input type="number" id="defaultRefresh" name="default_refresh" class="form-control" value="7200" min="60">
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultRetry">Default Retry (seconds)</label>
+                    <input type="number" id="defaultRetry" name="default_retry" class="form-control" value="3600" min="60">
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultExpire">Default Expire (seconds)</label>
+                    <input type="number" id="defaultExpire" name="default_expire" class="form-control" value="1209600" min="60">
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultMinimum">Default Minimum (seconds)</label>
+                    <input type="number" id="defaultMinimum" name="default_minimum" class="form-control" value="3600" min="60">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Security</h3>
+        </div>
+        <form id="securitySettingsForm" onsubmit="saveSecuritySettings(event)">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="sessionTimeout">Session Timeout (minutes)</label>
+                    <input type="number" id="sessionTimeout" name="session_timeout" class="form-control" value="60" min="5" max="1440">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="require_2fa" id="require2fa">
+                        <span>Require two-factor authentication</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="maxLoginAttempts">Maximum Login Attempts</label>
+                    <input type="number" id="maxLoginAttempts" name="max_login_attempts" class="form-control" value="5" min="3" max="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="lockoutDuration">Lockout Duration (minutes)</label>
+                    <input type="number" id="lockoutDuration" name="lockout_duration" class="form-control" value="30" min="5" max="1440">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Notifications</h3>
+        </div>
+        <form id="notificationSettingsForm" onsubmit="saveNotificationSettings(event)">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="switch-label">
+                        <span>Email Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox" name="email_notifications" id="emailNotifications">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="smtpServer">SMTP Server</label>
+                    <input type="text" id="smtpServer" name="smtp_server" class="form-control" placeholder="smtp.example.com">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="smtpPort">SMTP Port</label>
+                        <input type="number" id="smtpPort" name="smtp_port" class="form-control" value="587">
+                    </div>
+                    <div class="form-group">
+                        <label for="smtpSecurity">Security</label>
+                        <select id="smtpSecurity" name="smtp_security" class="form-select">
+                            <option value="tls">TLS</option>
+                            <option value="ssl">SSL</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="smtpUser">SMTP User</label>
+                        <input type="text" id="smtpUser" name="smtp_user" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="smtpPassword">SMTP Password</label>
+                        <input type="password" id="smtpPassword" name="smtp_password" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailFrom">From Email</label>
+                    <input type="email" id="emailFrom" name="email_from" class="form-control" placeholder="dns-manager@example.com">
+                </div>
+
+                <div class="form-section">
+                    <h4>Notify On</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_zone_changes" checked>
+                            <span>Zone changes</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_backup" checked>
+                            <span>Backup completed</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_errors" checked>
+                            <span>System errors</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_login">
+                            <span>New logins</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn" onclick="testEmail()">Test Email</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="card card-danger">
+    <div class="card-header">
+        <h3>Danger Zone</h3>
+    </div>
+    <div class="card-body">
+        <div class="danger-item">
+            <div class="danger-info">
+                <h4>Reload BIND</h4>
+                <p>Forces reload of all zones on the DNS server.</p>
+            </div>
+            <button class="btn btn-warning" onclick="reloadBind()">Reload</button>
+        </div>
+
+        <div class="danger-item">
+            <div class="danger-info">
+                <h4>Clear DNS Cache</h4>
+                <p>Removes all cached entries from the DNS server.</p>
+            </div>
+            <button class="btn btn-warning" onclick="flushCache()">Clear Cache</button>
+        </div>
+
+        <div class="danger-item">
+            <div class="danger-info">
+                <h4>Clear Audit Logs</h4>
+                <p>Permanently removes all audit logs. This action cannot be undone.</p>
+            </div>
+            <button class="btn btn-danger" onclick="clearAuditLogs()">Clear Logs</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveDNSSettings(event) {
+    event.preventDefault();
+    saveForm('dnsSettingsForm', '/settings/dns');
+}
+
+function saveSecuritySettings(event) {
+    event.preventDefault();
+    saveForm('securitySettingsForm', '/settings/security');
+}
+
+function saveNotificationSettings(event) {
+    event.preventDefault();
+    saveForm('notificationSettingsForm', '/settings/notifications');
+}
+
+function saveForm(formId, url) {
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    // Handle checkboxes
+    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        data[cb.name] = cb.checked;
+    });
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Settings saved', 'success');
+        } else {
+            showNotification(result.message || 'Error saving settings', 'error');
+        }
+    })
+    .catch(() => showNotification('Error saving settings', 'error'));
+}
+
+function testEmail() {
+    fetch('/settings/test-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Test email sent', 'success');
+        } else {
+            showNotification(result.message || 'Error sending email', 'error');
+        }
+    })
+    .catch(() => showNotification('Error sending test email', 'error'));
+}
+
+function reloadBind() {
+    if (!confirm('Reload all BIND zones?')) return;
+
+    fetch('/settings/reload-bind', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('BIND reloaded successfully', 'success');
+        } else {
+            showNotification(result.message || 'Error reloading BIND', 'error');
+        }
+    })
+    .catch(() => showNotification('Error reloading BIND', 'error'));
+}
+
+function flushCache() {
+    if (!confirm('Clear all DNS cache?')) return;
+
+    fetch('/settings/flush-cache', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('DNS cache cleared', 'success');
+        } else {
+            showNotification(result.message || 'Error clearing cache', 'error');
+        }
+    })
+    .catch(() => showNotification('Error clearing DNS cache', 'error'));
+}
+
+function clearAuditLogs() {
+    if (!confirm('WARNING: This will permanently remove all audit logs. Continue?')) return;
+    if (!confirm('Are you absolutely sure? This action cannot be undone.')) return;
+
+    fetch('/settings/clear-audit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Audit logs cleared', 'success');
+        } else {
+            showNotification(result.message || 'Error clearing logs', 'error');
+        }
+    })
+    .catch(() => showNotification('Error clearing audit logs', 'error'));
+}
+</script>
+{% endblock %}

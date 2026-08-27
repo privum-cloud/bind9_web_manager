@@ -1,0 +1,28 @@
+; Reverse DNS Zone for 172.20.0.0/16 (Docker Network)
+; DNS Web Manager - Reverse Zone
+;
+$TTL 86400      ; 24 hours default TTL
+
+@   IN  SOA     ns1.example.com. admin.example.com. (
+                2025112701  ; Serial (YYYYMMDDNN)
+                3600        ; Refresh (1 hour)
+                1800        ; Retry (30 minutes)
+                604800      ; Expire (1 week)
+                86400       ; Minimum TTL (24 hours)
+)
+
+; Nameservers
+@               IN  NS      ns1.example.com.
+@               IN  NS      ns2.example.com.
+
+; PTR records for Docker containers
+10.0            IN  PTR     ns1.example.com.        ; dns-master
+11.0            IN  PTR     ns2.example.com.        ; dns-slave
+20.0            IN  PTR     web-manager.example.com. ; web-manager
+30.0            IN  PTR     backup.example.com.     ; backup
+40.0            IN  PTR     postgres.example.com.   ; postgres (future)
+
+; PTR records for example hosts
+100.0           IN  PTR     www.example.com.
+101.0           IN  PTR     mail.example.com.
+102.0           IN  PTR     ftp.example.com.

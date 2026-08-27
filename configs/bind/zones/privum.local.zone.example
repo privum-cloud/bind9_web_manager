@@ -1,0 +1,51 @@
+; ============================================
+; PRIVUM DNS Manager - Example Zone File
+; Zone: privum.local
+; ============================================
+; This is an example zone file demonstrating the format
+; used by PRIVUM DNS Manager. Replace IPs with your actual
+; server addresses.
+;
+; Serial format: YYYYMMDDNN (date + revision number)
+; ============================================
+
+$TTL 86400
+
+@       IN      SOA     ns1.privum.local. admin.privum.local. (
+                        2024010101      ; Serial (YYYYMMDDNN)
+                        3600            ; Refresh (1 hour)
+                        1800            ; Retry (30 minutes)
+                        604800          ; Expire (1 week)
+                        86400           ; Minimum TTL (1 day)
+                        )
+
+; Name Servers
+        IN      NS      ns1.privum.local.
+        IN      NS      ns2.privum.local.
+
+; Mail Servers
+        IN      MX      10      mail.privum.local.
+
+; A Records - DNS Servers
+ns1     IN      A       192.168.1.67    ; Master DNS
+ns2     IN      A       192.168.1.224   ; Slave DNS
+
+; A Records - Services
+mail    IN      A       192.168.1.100
+www     IN      A       192.168.1.101
+api     IN      A       192.168.1.102
+
+; CNAME Records
+webmail IN      CNAME   mail.privum.local.
+ftp     IN      CNAME   www.privum.local.
+
+; TXT Records
+@       IN      TXT     "v=spf1 mx a ~all"
+_dmarc  IN      TXT     "v=DMARC1; p=none; rua=mailto:admin@privum.local"
+
+; ============================================
+; Notes:
+; - Update ns1/ns2 IPs to match your actual servers
+; - Increment serial number on every change
+; - TTL values are in seconds
+; ============================================

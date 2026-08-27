@@ -1,0 +1,66 @@
+// BIND9 Options - DNS Slave
+// DNS Web Manager - Slave Server Configuration
+
+options {
+    directory "/var/cache/bind";
+
+    // Disable recursion - this is an authoritative server only
+    recursion no;
+
+    // Allow queries from Docker networks and localhost
+    allow-query {
+        localhost;
+        172.16.0.0/12;  // All Docker bridge networks
+        172.25.0.0/16;  // DNS network (IPs fixos)
+        10.0.0.0/8;     // Alternative Docker networks
+    };
+
+    // Slave doesn't need to allow transfers (unless you have tertiary DNS)
+    allow-transfer { none; };
+
+    // Listen on all interfaces
+    listen-on { any; };
+    listen-on-v6 { any; };
+
+    // DNSSEC settings
+    dnssec-validation auto;
+
+    // Query logging (useful for debugging)
+    querylog yes;
+
+    // Version hiding (security)
+    version "DNS Web Manager Slave";
+
+    // Reduce response size for better performance
+    minimal-responses yes;
+};
+
+// Logging configuration
+logging {
+    channel default_log {
+        file "/var/log/named/named.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+    channel query_log {
+        file "/var/log/named/query.log" versions 3 size 10m;
+        severity info;
+        print-time yes;
+    };
+
+    channel transfer_log {
+        file "/var/log/named/transfer.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-severity yes;
+    };
+
+    category default { default_log; };
+    category queries { query_log; };
+    category xfer-in { transfer_log; };
+    category xfer-out { transfer_log; };
+    category notify { transfer_log; };
+};

@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}DNS Zones{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>DNS Zones</h1>
+        <p>Manage your DNS zones and records</p>
+    </div>
+    <div class="page-header-right">
+        <a href="{{ url_for('zones.create') }}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            New Zone
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card filters-card">
+    <div class="filters-row">
+        <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchZones" placeholder="Search zones..." class="search-input">
+        </div>
+        <div class="filter-group">
+            <select id="filterType" class="form-select">
+                <option value="">All types</option>
+                <option value="master">Master</option>
+                <option value="slave">Slave</option>
+                <option value="forward">Forward</option>
+            </select>
+            <select id="filterStatus" class="form-select">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Zones Table -->
+<div class="card">
+    <div class="card-body">
+        <table class="table" id="zonesTable">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" id="selectAll" class="checkbox">
+                    </th>
+                    <th>Zone</th>
+                    <th>Type</th>
+                    <th>Records</th>
+                    <th>Serial</th>
+                    <th>Last Modified</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for zone in zones %}
+                <tr data-zone="{{ zone.name }}" data-type="{{ zone.type }}" data-status="{{ zone.status }}">
+                    <td>
+                        <input type="checkbox" class="checkbox zone-checkbox" value="{{ zone.name }}">
+                    </td>
+                    <td>
+                        <a href="{{ url_for('zones.view', zone_name=zone.name) }}" class="zone-link">
+                            <strong>{{ zone.name }}</strong>
+                        </a>
+                    </td>
+                    <td><span class="badge badge-{{ zone.type }}">{{ zone.type }}</span></td>
+                    <td>{{ zone.records }}</td>
+                    <td><code>{{ zone.serial }}</code></td>
+                    <td>{{ zone.modified }}</td>
+                    <td>
+                        <span class="status-badge {{ 'active' if zone.status == 'active' else 'inactive' }}">
+                            {{ zone.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('zones.view', zone_name=zone.name) }}" class="btn btn-icon" title="View">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                            <button class="btn btn-icon" title="Sync" onclick="syncZone('{{ zone.name }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                            </button>
+                            <button class="btn btn-icon btn-danger" title="Delete" onclick="deleteZone('{{ zone.name }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="bulk-actions" id="bulkActions" style="display: none;">
+    <span class="bulk-count"><span id="selectedCount">0</span> selected</span>
+    <button class="btn btn-sm" onclick="bulkSync()">Sync</button>
+    <button class="btn btn-sm btn-danger" onclick="bulkDelete()">Delete</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchZones');
+    const filterType = document.getElementById('filterType');
+    const filterStatus = document.getElementById('filterStatus');
+    const table = document.getElementById('zonesTable');
+    const rows = table.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const search = searchInput.value.toLowerCase();
+        const type = filterType.value;
+        const status = filterStatus.value;
+
+        rows.forEach(row => {
+            const zoneName = row.dataset.zone.toLowerCase();
+            const zoneType = row.dataset.type;
+            const zoneStatus = row.dataset.status;
+
+            const matchSearch = zoneName.includes(search);
+            const matchType = !type || zoneType === type;
+            const matchStatus = !status || zoneStatus === status;
+
+            row.style.display = matchSearch && matchType && matchStatus ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    filterType.addEventListener('change', filterTable);
+    filterStatus.addEventListener('change', filterTable);
+
+    // Select all functionality
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.zone-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+
+    function updateBulkActions() {
+        const checked = document.querySelectorAll('.zone-checkbox:checked');
+        selectedCount.textContent = checked.length;
+        bulkActions.style.display = checked.length > 0 ? 'flex' : 'none';
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => {
+            if (cb.closest('tr').style.display !== 'none') {
+                cb.checked = this.checked;
+            }
+        });
+        updateBulkActions();
+    });
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBulkActions));
+});
+
+function syncZone(zoneName) {
+    if (!confirm(`Sync zone ${zoneName}?`)) return;
+
+    fetch(`/zones/${zoneName}/sync`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Zone synced successfully', 'success');
+        } else {
+            showNotification(data.message || 'Error syncing zone', 'error');
+        }
+    })
+    .catch(() => showNotification('Error syncing zone', 'error'));
+}
+
+function deleteZone(zoneName) {
+    if (!confirm(`Are you sure you want to delete zone ${zoneName}? This action cannot be undone.`)) return;
+
+    fetch(`/zones/${zoneName}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Zone deleted successfully', 'success');
+            document.querySelector(`tr[data-zone="${zoneName}"]`).remove();
+        } else {
+            showNotification(data.message || 'Error deleting zone', 'error');
+        }
+    })
+    .catch(() => showNotification('Error deleting zone', 'error'));
+}
+
+function bulkSync() {
+    const selected = Array.from(document.querySelectorAll('.zone-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) return;
+
+    if (!confirm(`Sync ${selected.length} zone(s)?`)) return;
+
+    selected.forEach(zoneName => syncZone(zoneName));
+}
+
+function bulkDelete() {
+    const selected = Array.from(document.querySelectorAll('.zone-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) return;
+
+    if (!confirm(`Delete ${selected.length} zone(s)? This action cannot be undone.`)) return;
+
+    selected.forEach(zoneName => deleteZone(zoneName));
+}
+</script>
+{% endblock %}

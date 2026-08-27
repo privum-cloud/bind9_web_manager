@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Users</h1>
+        <p>Manage system users</p>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="openUserModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            New User
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid stats-grid-3">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ users|length }}</span>
+            <span class="stat-label">Total Users</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ users|selectattr('active')|list|length }}</span>
+            <span class="stat-label">Active Users</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ users|selectattr('role', 'eq', 'admin')|list|length }}</span>
+            <span class="stat-label">Administrators</span>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchUsers" placeholder="Search users..." class="search-input">
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr data-username="{{ user.username }}">
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">
+                                {{ user.username[0]|upper }}
+                            </div>
+                            <span>{{ user.username }}</span>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="badge badge-{{ user.role }}">{{ user.role }}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ 'active' if user.active else 'inactive' }}">
+                            {{ 'Active' if user.active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>{{ user.last_login or '-' }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-icon" title="Edit" onclick="editUser('{{ user.id }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="btn btn-icon btn-danger" title="Delete" onclick="deleteUser('{{ user.id }}', '{{ user.username }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal" id="userModal">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="userModalTitle">New User</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="userForm" onsubmit="saveUser(event)">
+            <div class="modal-body">
+                <input type="hidden" id="userId" name="id">
+
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" class="form-control" required
+                           pattern="[a-zA-Z0-9_-]+" minlength="3">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password <span id="passwordHint">(leave blank to keep current)</span></label>
+                    <input type="password" id="password" name="password" class="form-control" minlength="8">
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role *</label>
+                    <select id="role" name="role" class="form-select" required>
+                        <option value="viewer">Viewer</option>
+                        <option value="operator">Operator</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="active" name="active" checked>
+                        <span>Active user</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search users
+document.getElementById('searchUsers').addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+        const username = row.dataset.username.toLowerCase();
+        row.style.display = username.includes(search) ? '' : 'none';
+    });
+});
+
+function openUserModal() {
+    document.getElementById('userModalTitle').textContent = 'New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('passwordHint').style.display = 'none';
+    document.getElementById('password').required = true;
+    document.getElementById('userModal').classList.add('active');
+}
+
+function editUser(userId) {
+    // TODO: Fetch user data and populate form
+    document.getElementById('userModalTitle').textContent = 'Edit User';
+    document.getElementById('userId').value = userId;
+    document.getElementById('passwordHint').style.display = 'inline';
+    document.getElementById('password').required = false;
+    document.getElementById('userModal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('userModal').classList.remove('active');
+}
+
+function saveUser(event) {
+    event.preventDefault();
+    const form = document.getElementById('userForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    data.active = document.getElementById('active').checked;
+
+    const isEdit = data.id;
+    const url = isEdit ? `/users/${data.id}` : '/users';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('User saved successfully', 'success');
+            closeModal();
+            location.reload();
+        } else {
+            showNotification(result.message || 'Error saving user', 'error');
+        }
+    })
+    .catch(() => showNotification('Error saving user', 'error'));
+}
+
+function deleteUser(userId, username) {
+    if (!confirm(`Delete user ${username}?`)) return;
+
+    fetch(`/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('User deleted', 'success');
+            location.reload();
+        } else {
+            showNotification(result.message || 'Error deleting user', 'error');
+        }
+    })
+    .catch(() => showNotification('Error deleting user', 'error'));
+}
+</script>
+{% endblock %}

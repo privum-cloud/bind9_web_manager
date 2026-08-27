@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}{{ zone.name }} - DNS Zone{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('zones.list') }}" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back
+        </a>
+        <h1>{{ zone.name }}</h1>
+        <span class="badge badge-{{ zone.type }}">{{ zone.type }}</span>
+    </div>
+    <div class="page-header-right">
+        <button class="btn" onclick="syncZone()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Sync
+        </button>
+        <button class="btn btn-primary" onclick="openAddRecordModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            New Record
+        </button>
+    </div>
+</div>
+
+<!-- Zone Info -->
+<div class="zone-info-grid">
+    <div class="card zone-info-card">
+        <div class="card-body">
+            <div class="info-row">
+                <span class="info-label">Serial</span>
+                <span class="info-value"><code>{{ zone.serial }}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Default TTL</span>
+                <span class="info-value">{{ zone.ttl }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Refresh</span>
+                <span class="info-value">{{ zone.refresh }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Retry</span>
+                <span class="info-value">{{ zone.retry }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Expire</span>
+                <span class="info-value">{{ zone.expire }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Minimum</span>
+                <span class="info-value">{{ zone.minimum }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card zone-info-card">
+        <div class="card-body">
+            <div class="info-row">
+                <span class="info-label">Primary Server</span>
+                <span class="info-value">{{ zone.primary_ns }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Admin Email</span>
+                <span class="info-value">{{ zone.admin_email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Records</span>
+                <span class="info-value">{{ records|length }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="status-badge active">Active</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Records Table -->
+<div class="card">
+    <div class="card-header">
+        <h3>DNS Records</h3>
+        <div class="card-header-actions">
+            <div class="search-box-sm">
+                <input type="text" id="searchRecords" placeholder="Search records..." class="search-input">
+            </div>
+            <select id="filterRecordType" class="form-select form-select-sm">
+                <option value="">All types</option>
+                <option value="A">A</option>
+                <option value="AAAA">AAAA</option>
+                <option value="CNAME">CNAME</option>
+                <option value="MX">MX</option>
+                <option value="TXT">TXT</option>
+                <option value="NS">NS</option>
+                <option value="PTR">PTR</option>
+                <option value="SRV">SRV</option>
+                <option value="CAA">CAA</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table" id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>TTL</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr data-name="{{ record.name }}" data-type="{{ record.type }}">
+                    <td><code>{{ record.name }}</code></td>
+                    <td>{{ record.ttl }}</td>
+                    <td><span class="badge badge-type-{{ record.type|lower }}">{{ record.type }}</span></td>
+                    <td class="record-value">{{ record.value }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-icon" title="Edit"
+                                onclick="editRecord('{{ record.name }}', '{{ record.ttl }}', '{{ record.type }}', '{{ record.value }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="btn btn-icon btn-danger" title="Delete"
+                                onclick="deleteRecord('{{ record.name }}', '{{ record.type }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Record Modal -->
+<div class="modal" id="recordModal">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">New Record</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="recordForm" onsubmit="saveRecord(event)">
+            <div class="modal-body">
+                <input type="hidden" id="recordOriginalName" name="original_name">
+                <input type="hidden" id="recordOriginalType" name="original_type">
+
+                <div class="form-group">
+                    <label for="recordName">Name</label>
+                    <input type="text" id="recordName" name="name" class="form-control" placeholder="@, www, mail, etc." required>
+                    <span class="form-hint">Use @ for zone root</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recordTTL">TTL</label>
+                        <input type="number" id="recordTTL" name="ttl" class="form-control" value="3600" min="60">
+                    </div>
+                    <div class="form-group">
+                        <label for="recordType">Type</label>
+                        <select id="recordType" name="type" class="form-select" required onchange="updateValuePlaceholder()">
+                            <option value="A">A</option>
+                            <option value="AAAA">AAAA</option>
+                            <option value="CNAME">CNAME</option>
+                            <option value="MX">MX</option>
+                            <option value="TXT">TXT</option>
+                            <option value="NS">NS</option>
+                            <option value="PTR">PTR</option>
+                            <option value="SRV">SRV</option>
+                            <option value="CAA">CAA</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="priorityGroup" style="display: none;">
+                    <label for="recordPriority">Priority</label>
+                    <input type="number" id="recordPriority" name="priority" class="form-control" value="10" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="recordValue">Value</label>
+                    <input type="text" id="recordValue" name="value" class="form-control" placeholder="192.168.1.1" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const zoneName = '{{ zone.name }}';
+
+// Filter records
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchRecords');
+    const filterType = document.getElementById('filterRecordType');
+    const rows = document.querySelectorAll('#recordsTable tbody tr');
+
+    function filterRecords() {
+        const search = searchInput.value.toLowerCase();
+        const type = filterType.value;
+
+        rows.forEach(row => {
+            const name = row.dataset.name.toLowerCase();
+            const recordType = row.dataset.type;
+
+            const matchSearch = name.includes(search);
+            const matchType = !type || recordType === type;
+
+            row.style.display = matchSearch && matchType ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterRecords);
+    filterType.addEventListener('change', filterRecords);
+});
+
+function openAddRecordModal() {
+    document.getElementById('modalTitle').textContent = 'New Record';
+    document.getElementById('recordForm').reset();
+    document.getElementById('recordOriginalName').value = '';
+    document.getElementById('recordOriginalType').value = '';
+    document.getElementById('recordModal').classList.add('active');
+    updateValuePlaceholder();
+}
+
+function editRecord(name, ttl, type, value) {
+    document.getElementById('modalTitle').textContent = 'Edit Record';
+    document.getElementById('recordOriginalName').value = name;
+    document.getElementById('recordOriginalType').value = type;
+    document.getElementById('recordName').value = name;
+    document.getElementById('recordTTL').value = ttl;
+    document.getElementById('recordType').value = type;
+    document.getElementById('recordValue').value = value;
+    document.getElementById('recordModal').classList.add('active');
+    updateValuePlaceholder();
+}
+
+function closeModal() {
+    document.getElementById('recordModal').classList.remove('active');
+}
+
+function updateValuePlaceholder() {
+    const type = document.getElementById('recordType').value;
+    const valueInput = document.getElementById('recordValue');
+    const priorityGroup = document.getElementById('priorityGroup');
+
+    const placeholders = {
+        'A': '192.168.1.1',
+        'AAAA': '2001:db8::1',
+        'CNAME': 'target.example.com.',
+        'MX': 'mail.example.com.',
+        'TXT': '"v=spf1 include:_spf.google.com ~all"',
+        'NS': 'ns1.example.com.',
+        'PTR': 'host.example.com.',
+        'SRV': '0 5 5060 sipserver.example.com.',
+        'CAA': '0 issue "letsencrypt.org"'
+    };
+
+    valueInput.placeholder = placeholders[type] || '';
+    priorityGroup.style.display = (type === 'MX' || type === 'SRV') ? 'block' : 'none';
+}
+
+function saveRecord(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('recordForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    const isEdit = data.original_name && data.original_type;
+    const url = isEdit
+        ? `/zones/${zoneName}/records/${data.original_name}/${data.original_type}`
+        : `/zones/${zoneName}/records`;
+    const method = isEdit ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Record saved successfully', 'success');
+            closeModal();
+            location.reload();
+        } else {
+            showNotification(result.message || 'Error saving record', 'error');
+        }
+    })
+    .catch(() => showNotification('Error saving record', 'error'));
+}
+
+function deleteRecord(name, type) {
+    if (!confirm(`Delete record ${name} (${type})?`)) return;
+
+    fetch(`/zones/${zoneName}/records/${name}/${type}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Record deleted', 'success');
+            location.reload();
+        } else {
+            showNotification(result.message || 'Error deleting record', 'error');
+        }
+    })
+    .catch(() => showNotification('Error deleting record', 'error'));
+}
+
+function syncZone() {
+    fetch(`/zones/${zoneName}/sync`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Zone synced', 'success');
+        } else {
+            showNotification(result.message || 'Error syncing zone', 'error');
+        }
+    })
+    .catch(() => showNotification('Error syncing zone', 'error'));
+}
+</script>
+{% endblock %}

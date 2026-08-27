@@ -1,0 +1,23 @@
+// DNS Manager - Local Zone Configuration (Slave)
+// This file is managed by DNS Manager
+
+// RNDC control channel (local only)
+controls {
+    inet 127.0.0.1 port 953
+        allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+// Include RNDC key (same as master)
+include "{{RNDC_KEY_PATH}}";
+
+// Master server ACL
+acl "masters" {
+    {{MASTER_IP}};
+};
+
+// ============================================
+// Slave zone definitions
+// Zones are automatically transferred from master
+// ============================================
+
+{{ZONE_DEFINITIONS}}

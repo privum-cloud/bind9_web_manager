@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 22%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 210 100% 50%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Sidebar */
+.sidebar {
+  @apply fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col;
+}
+
+.sidebar-header {
+  @apply p-4 border-b border-border;
+}
+
+.sidebar-nav {
+  @apply flex-1 py-4 overflow-y-auto;
+}
+
+.nav-item {
+  @apply mx-2 mb-1;
+}
+
+.nav-link {
+  @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors;
+}
+
+.nav-link.active {
+  @apply bg-primary text-primary-foreground;
+}
+
+/* Main content */
+.main-content {
+  @apply ml-64 min-h-screen;
+}
+
+/* Stats card */
+.stat-card {
+  @apply bg-card border border-border rounded-xl p-5 flex items-center gap-4;
+}
+
+.stat-icon {
+  @apply w-12 h-12 rounded-lg flex items-center justify-center;
+}
+
+.stat-icon.primary { @apply bg-primary/20 text-primary; }
+.stat-icon.success { @apply bg-green-500/20 text-green-500; }
+.stat-icon.warning { @apply bg-yellow-500/20 text-yellow-500; }
+.stat-icon.info { @apply bg-blue-500/20 text-blue-500; }
+
+/* Status badges */
+.status-badge {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-badge.online { @apply bg-green-500/20 text-green-500; }
+.status-badge.offline { @apply bg-red-500/20 text-red-500; }
+.status-badge.active { @apply bg-green-500/20 text-green-500; }
+.status-badge.inactive { @apply bg-gray-500/20 text-gray-500; }
+
+/* Record type badges */
+.badge-type {
+  @apply px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.badge-type-a { @apply bg-green-500/20 text-green-500; }
+.badge-type-aaaa { @apply bg-blue-500/20 text-blue-500; }
+.badge-type-cname { @apply bg-purple-500/20 text-purple-500; }
+.badge-type-mx { @apply bg-orange-500/20 text-orange-500; }
+.badge-type-txt { @apply bg-gray-500/20 text-gray-400; }
+.badge-type-ns { @apply bg-amber-500/20 text-amber-500; }
+.badge-type-ptr { @apply bg-teal-500/20 text-teal-500; }
+.badge-type-srv { @apply bg-pink-500/20 text-pink-500; }
+
+/* Fix autofill background color for dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  caret-color: hsl(var(--foreground)) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox autofill */
+input:autofill {
+  background-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}

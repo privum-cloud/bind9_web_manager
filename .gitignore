@@ -1,0 +1,107 @@
+# ============================================
+# PRIVUM DNS Manager - Git Ignore
+# ============================================
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Encryption keys and certificates
+*.key
+*.pem
+*.crt
+*.p12
+rndc.key
+
+# Backup files
+backups/
+backup/
+*.backup
+*.bak
+
+# Log files
+logs/
+*.log
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+# Python lib directories (but not frontend/src/lib)
+lib/
+!frontend/src/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+frontend/dist/
+web-manager/static/
+*.min.js
+*.min.css
+
+# Database directory
+web-manager/data/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker (if used)
+.docker/
+
+# Test files
+.tox/
+.nox/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

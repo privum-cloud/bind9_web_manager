@@ -1,0 +1,60 @@
+// DNS Manager - BIND9 Slave Configuration
+// This file is managed by DNS Manager installation script
+
+options {
+    directory "/var/cache/bind";
+
+    // Disable recursion - authoritative only
+    recursion no;
+
+    // Allow queries from anywhere
+    allow-query { any; };
+
+    // Slave does not transfer to anyone
+    allow-transfer { none; };
+
+    // Do not notify (master does this)
+    notify no;
+
+    // DNSSEC validation
+    dnssec-validation auto;
+
+    // Listen on all interfaces
+    listen-on { any; };
+    listen-on-v6 { any; };
+
+    // Query logging
+    querylog yes;
+
+    // Version hiding for security
+    version "DNS Manager Slave";
+};
+
+// Logging configuration
+logging {
+    channel default_log {
+        file "/var/log/named/named.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+    channel query_log {
+        file "/var/log/named/query.log" versions 5 size 10m;
+        severity debug;
+        print-time yes;
+    };
+
+    channel transfer_log {
+        file "/var/log/named/transfer.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+    };
+
+    category default { default_log; };
+    category queries { query_log; };
+    category xfer-in { transfer_log; };
+    category xfer-out { transfer_log; };
+    category notify { transfer_log; };
+};

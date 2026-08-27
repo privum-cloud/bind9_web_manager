@@ -1,0 +1,53 @@
+[Unit]
+Description=DNS Manager API Server
+Documentation=https://gitlab.com/privum_public/dns_manager
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dns-manager
+Group=dns-manager
+
+# Working directory
+WorkingDirectory=/opt/dns-manager
+
+# Environment
+Environment="PATH=/opt/dns-manager/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="FLASK_ENV=production"
+Environment="FLASK_SECRET_KEY={{SECRET_KEY}}"
+
+# Start command - Gunicorn with 4 workers
+ExecStart=/opt/dns-manager/venv/bin/gunicorn \
+    --workers 4 \
+    --bind 127.0.0.1:5000 \
+    --timeout 120 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --access-logfile /var/log/dns-manager/access.log \
+    --error-logfile /var/log/dns-manager/error.log \
+    --capture-output \
+    app:app
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Resource limits
+LimitNOFILE=65535
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/dns-manager/data /opt/dns-manager/backups /var/log/dns-manager /var/lib/bind/zones /etc/bind
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dns-manager-api
+
+[Install]
+WantedBy=multi-user.target

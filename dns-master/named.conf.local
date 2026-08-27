@@ -1,0 +1,58 @@
+// BIND9 Local Configuration - DNS Master
+// Zone definitions for authoritative DNS
+
+// Include RNDC key for remote control
+include "/etc/bind/rndc.key";
+
+// RNDC Controls - allows remote management from any Docker network
+controls {
+    inet 127.0.0.1 port 953 allow { 127.0.0.1; } keys { "rndc-key"; };
+    inet 0.0.0.0 port 953 allow { 172.16.0.0/12; 172.25.0.0/16; 10.0.0.0/8; } keys { "rndc-key"; };
+};
+
+// ACL for trusted networks (covers all Docker networks)
+acl "trusted" {
+    localhost;
+    172.16.0.0/12;  // All Docker bridge networks
+    172.25.0.0/16;  // DNS network (IPs fixos)
+    10.0.0.0/8;     // Alternative Docker networks
+};
+
+// ACL for slave servers
+acl "slaves" {
+    172.25.0.11;    // dns-slave IP fixo
+};
+
+// ============================================
+// ZONE DEFINITIONS
+// ============================================
+
+// Example zone - remove or modify for your domains
+zone "example.com" {
+    type master;
+    file "/etc/bind/zones/db.example.com";
+    allow-transfer { slaves; };
+    allow-update { none; };
+    notify yes;
+};
+
+// Reverse DNS zone for Docker network (optional)
+zone "20.172.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.172.20";
+    allow-transfer { slaves; };
+    allow-update { none; };
+    notify yes;
+};
+
+// ============================================
+// ADD YOUR ZONES BELOW
+// ============================================
+// Example:
+// zone "yourdomain.com" {
+//     type master;
+//     file "/etc/bind/zones/db.yourdomain.com";
+//     allow-transfer { slaves; };
+//     allow-update { none; };
+//     notify yes;
+// };

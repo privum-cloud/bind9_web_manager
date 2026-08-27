@@ -1,0 +1,17 @@
+[Unit]
+Description=PRIVUM DNS Manager Slave Agent
+After=network-online.target named.service
+Wants=network-online.target named.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dns-manager/slave-agent
+ExecStart=/opt/dns-manager/venv/bin/python /opt/dns-manager/slave-agent/agent.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
