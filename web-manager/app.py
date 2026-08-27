@@ -2,7 +2,12 @@
 """
 DNS Web Manager - API Server
 REST API for managing BIND9 DNS servers
+
+Copyright (C) 2024-2026 PRIVUM
+SPDX-License-Identifier: AGPL-3.0-or-later
 """
+import os
+
 from dotenv import load_dotenv
 load_dotenv()  # Load .env before any other imports
 
@@ -33,7 +38,6 @@ def create_app():
     # Initialize Rate Limiter
     # Protege contra brute-force e DDoS
     # Usa memcached-style storage em arquivo para funcionar com múltiplos workers
-    import os
     storage_uri = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
 
     limiter = Limiter(
@@ -134,6 +138,13 @@ def create_app():
         return jsonify({
             'name': 'PRIVUM DNS Manager API',
             'version': '2.0.0',
+            # AGPLv3 section 13: users interacting with this service over a
+            # network must be offered the Corresponding Source. If you deploy a
+            # MODIFIED version, point 'source' at your own published sources.
+            'license': 'AGPL-3.0-or-later',
+            'source': os.environ.get(
+                'SOURCE_URL', 'https://gitlab.com/privum_public/dns_manager'
+            ),
             'endpoints': {
                 'auth': '/api/auth',
                 'dashboard': '/api/dashboard',

@@ -1,6 +1,6 @@
 # PRIVUM DNS Manager
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.0.0-green.svg)]()
 
 **PRIVUM DNS Manager** is a modern, **free and open-source web GUI for BIND 9** — a self-hosted web interface (web UI) for managing BIND9 DNS servers with a Master/Slave architecture. It provides a user-friendly interface for managing DNS zones and records, server replication, Keycloak SSO, role-based access control (RBAC), and a full audit trail.
@@ -311,7 +311,27 @@ Contributions are welcome! Please:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Copyright (C) 2024-2026 PRIVUM
+
+PRIVUM DNS Manager is free software: you can redistribute it and/or modify it
+under the terms of the **GNU Affero General Public License** as published by the
+Free Software Foundation, either version 3 of the License, or (at your option)
+any later version. See the [LICENSE](LICENSE) file for the full text.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+**What AGPLv3 means in practice for this project:** because DNS Manager is a web
+application, section 13 applies - if you run a *modified* version and let other
+people use it over a network, you must offer those users the corresponding
+source code of your modified version. Running it unmodified, or modifying it for
+purely internal use with no network users other than yourself, creates no such
+obligation.
+
+> Releases up to and including v2.0.0 were published under the MIT License and
+> remain available under those terms; the change to AGPLv3 applies from this
+> point forward.
 
 ## Support
 

@@ -105,3 +105,11 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+# AI agent working files - never publish in a public repo
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
+.superpowers/
+docs/superpowers/
