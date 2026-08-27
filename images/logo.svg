@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#bg)"/>
+
+  <!-- Globe lines -->
+  <ellipse cx="50" cy="50" rx="35" ry="35" fill="none" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+  <ellipse cx="50" cy="50" rx="35" ry="18" fill="none" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+  <line x1="15" y1="50" x2="85" y2="50" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+  <line x1="50" y1="15" x2="50" y2="85" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+
+  <!-- DNS text -->
+  <text x="50" y="58" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">DNS</text>
+
+  <!-- Connection dots -->
+  <circle cx="25" cy="35" r="4" fill="#60a5fa"/>
+  <circle cx="75" cy="35" r="4" fill="#60a5fa"/>
+  <circle cx="25" cy="65" r="4" fill="#60a5fa"/>
+  <circle cx="75" cy="65" r="4" fill="#60a5fa"/>
+
+  <!-- Light effect -->
+  <circle cx="35" cy="30" r="15" fill="white" opacity="0.1"/>
+</svg>
