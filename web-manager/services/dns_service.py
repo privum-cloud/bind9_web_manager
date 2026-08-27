@@ -4,6 +4,7 @@ Replaces SSH/Paramiko with direct RNDC commands and file access
 """
 import os
 import re
+import shutil
 import subprocess
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
@@ -214,8 +215,9 @@ class DNSService:
             with open(temp_file, 'w') as f:
                 f.write(content)
 
+            named_checkzone_path = shutil.which('named-checkzone')
             result = subprocess.run(
-                ['/usr/bin/named-checkzone', zone_name, temp_file],
+                [named_checkzone_path, zone_name, temp_file],
                 capture_output=True,
                 text=True,
                 timeout=10

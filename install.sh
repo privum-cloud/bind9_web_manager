@@ -961,8 +961,8 @@ main() {
 
     if [ "$MODE" == "master" ]; then
         log_info "Installing PRIVUM DNS Manager (Master)..."
-        download_source
         install_dependencies_master
+        download_source
         configure_bind_master
         install_api
         create_admin_user
