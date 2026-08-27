@@ -4,17 +4,16 @@
 
 # PRIVUM DNS Manager
 
-**Open-source web GUI for BIND 9 — manage zones, records and secondary servers from one dashboard.**
+**Open-source web GUI for BIND 9 — zones, records, users and secondary servers in one fast, audited, self-hosted app.**
 
-A free, self-hosted **BIND9 web interface** for teams who run their own authoritative DNS —
-no more hand-editing zone files, bumping serials and remembering `rndc` flags.
+A free, self-hosted alternative to Webmin's BIND module and to managed cloud DNS — keep every zone on your own nameservers, with no third‑party DNS provider.
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.0.0-green.svg)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./LICENSE)
+![Version 2.0.0](https://img.shields.io/badge/version-2.0.0-green.svg)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Ubuntu%20·%20Debian%20·%20Rocky-333.svg)
 ![Built with Python + Flask + React](https://img.shields.io/badge/Built%20with-Python%20·%20Flask%20·%20React-24c8db.svg)
 
-Made with care by **[Privum Cloud »](https://privum.cloud)**
+Made with ❤️ by **[Privum Cloud »](https://privum.cloud)**
 
 </div>
 
@@ -31,8 +30,9 @@ teams who want authoritative DNS they control, with a UI their whole team can us
 ## Why PRIVUM DNS Manager
 
 BIND 9 is the most widely deployed authoritative DNS server in the world — and it ships with no
-web interface at all. The usual options are editing zone files over SSH, a general-purpose
-server-admin panel that happens to include a BIND module, or a commercial DNS appliance.
+web interface at all. The usual options are editing zone files over SSH, bolting on
+[Webmin](https://webmin.com/)'s BIND module and inheriting a whole general-purpose server-admin
+panel with it, or handing your zones to a managed DNS provider.
 
 This project is the missing piece in between: a focused, **open source DNS server GUI** that does
 one job well. If you've been searching for a *"BIND9 web UI"*, a *"BIND DNS GUI"* or an
