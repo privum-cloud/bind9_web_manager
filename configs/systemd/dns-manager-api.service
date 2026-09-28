@@ -1,6 +1,6 @@
 [Unit]
 Description=DNS Manager API Server
-Documentation=https://gitlab.com/privum_public/dns_manager
+Documentation=https://github.com/privum-cloud/bind9_web_manager
 After=network.target
 Wants=network-online.target
 

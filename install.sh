@@ -6,7 +6,7 @@
 #   Master: curl -fsSL https://get.privum.cloud/dns | sudo bash -s -- --master
 #   Slave:  curl -fsSL https://get.privum.cloud/dns | sudo bash -s -- --slave --master-ip=<IP> --token=<TOKEN>
 #
-# Project: https://gitlab.com/privum_public/dns_manager
+# Project: https://github.com/privum-cloud/bind9_web_manager
 # License: AGPL-3.0-or-later
 # Version: 2.0.0
 #===============================================================================
@@ -14,10 +14,12 @@
 set -e
 
 # Version and URLs
-VERSION="2.0.0"
-REPO_URL="https://gitlab.com/privum_public/dns_manager.git"
-RELEASE_URL="https://gitlab.com/privum_public/dns_manager/-/archive/v${VERSION}/dns_manager-v${VERSION}.tar.gz"
-RAW_URL="https://gitlab.com/privum_public/dns_manager/-/raw/main"
+# Renamed from VERSION: detect_distro() sources /etc/os-release, which defines
+# its own VERSION ("24.04.5 LTS (Noble Numbat)") and silently clobbered ours.
+APP_VERSION="2.0.0"
+REPO_URL="https://github.com/privum-cloud/bind9_web_manager.git"
+RELEASE_URL="https://github.com/privum-cloud/bind9_web_manager/archive/refs/tags/v${APP_VERSION}.tar.gz"
+RAW_URL="https://raw.githubusercontent.com/privum-cloud/bind9_web_manager/main"
 
 # Colors
 RED='\033[0;31m'
@@ -79,7 +81,7 @@ log_error() {
 }
 
 show_usage() {
-    echo "PRIVUM DNS Manager - Installation Script v${VERSION}"
+    echo "PRIVUM DNS Manager - Installation Script v${APP_VERSION}"
     echo ""
     echo "Usage:"
     echo "  Master server:"
@@ -221,17 +223,16 @@ generate_admin_password() {
 #===============================================================================
 
 download_source() {
-    log_info "Downloading PRIVUM DNS Manager v${VERSION}..."
+    log_info "Downloading PRIVUM DNS Manager v${APP_VERSION}..."
 
     mkdir -p "$TEMP_DIR"
     cd "$TEMP_DIR"
 
     # Try to download release tarball
     if curl -fsSL "$RELEASE_URL" -o dns-manager.tar.gz 2>/dev/null; then
-        tar -xzf dns-manager.tar.gz
-        mv dns-manager-*/* . 2>/dev/null || mv dns-manager-${VERSION}/* . 2>/dev/null || true
+        tar -xzf dns-manager.tar.gz --strip-components=1
         rm -f dns-manager.tar.gz
-        log_success "Downloaded release v${VERSION}"
+        log_success "Downloaded release v${APP_VERSION}"
     else
         # Fallback: clone from git
         log_info "Downloading from git repository..."
@@ -646,7 +647,8 @@ print_master_summary() {
     echo -e "  ${GREEN}    --token=${SLAVE_TOKEN}${NC}"
     echo ""
     echo -e "${YELLOW}  ⚠ Token saved to: ${INSTALL_DIR}/slave-token.txt${NC}"
-    echo -e "${YELLOW}  ⚠ Generate new tokens in: Settings > Slaves${NC}"
+    echo -e "${YELLOW}  ⚠ Generate more tokens with: curl -X POST http://<this-host>/api/slaves/tokens \\${NC}"
+    echo -e "${YELLOW}      -H \"Authorization: Bearer <admin-jwt>\"${NC}"
     echo ""
     echo -e "${CYAN}Service Management:${NC}"
     echo "  systemctl {start|stop|restart|status} dns-manager-api"
