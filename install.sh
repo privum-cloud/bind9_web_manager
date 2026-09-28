@@ -6,7 +6,7 @@
 #   Master: curl -fsSL https://get.privum.cloud/dns | sudo bash -s -- --master
 #   Slave:  curl -fsSL https://get.privum.cloud/dns | sudo bash -s -- --slave --master-ip=<IP> --token=<TOKEN>
 #
-# Project: https://gitlab.com/privum_public/dns_manager
+# Project: https://github.com/privum-cloud/bind9_web_manager
 # License: AGPL-3.0-or-later
 # Version: 2.0.0
 #===============================================================================
@@ -15,9 +15,9 @@ set -e
 
 # Version and URLs
 VERSION="2.0.0"
-REPO_URL="https://gitlab.com/privum_public/dns_manager.git"
-RELEASE_URL="https://gitlab.com/privum_public/dns_manager/-/archive/v${VERSION}/dns_manager-v${VERSION}.tar.gz"
-RAW_URL="https://gitlab.com/privum_public/dns_manager/-/raw/main"
+REPO_URL="https://github.com/privum-cloud/bind9_web_manager.git"
+RELEASE_URL="https://github.com/privum-cloud/bind9_web_manager/archive/refs/tags/v${VERSION}.tar.gz"
+RAW_URL="https://raw.githubusercontent.com/privum-cloud/bind9_web_manager/main"
 
 # Colors
 RED='\033[0;31m'
@@ -228,8 +228,7 @@ download_source() {
 
     # Try to download release tarball
     if curl -fsSL "$RELEASE_URL" -o dns-manager.tar.gz 2>/dev/null; then
-        tar -xzf dns-manager.tar.gz
-        mv dns-manager-*/* . 2>/dev/null || mv dns-manager-${VERSION}/* . 2>/dev/null || true
+        tar -xzf dns-manager.tar.gz --strip-components=1
         rm -f dns-manager.tar.gz
         log_success "Downloaded release v${VERSION}"
     else

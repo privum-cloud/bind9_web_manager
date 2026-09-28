@@ -179,11 +179,11 @@ the pager for it — or for the Kubernetes, observability and security stack aro
 
 This project is young and moving, and **your feedback shapes it** — please don't hesitate:
 
-- 🐛 **Something broken?** [Open an issue](https://gitlab.com/privum_public/dns_manager/-/issues)
+- 🐛 **Something broken?** [Open an issue](https://github.com/privum-cloud/bind9_web_manager/issues)
   with your distro, BIND version and what you expected.
 - 💡 **Want a feature?** Record types, DNSSEC, an import path from another DNS server — say so.
   The [roadmap](docs/ROADMAP.md) is shaped by what people ask for.
-- 🔧 **Code?** Merge requests are welcome. Fork, branch, and describe the change.
+- 🔧 **Code?** Pull requests are welcome. Fork, branch, and describe the change.
 
 ## Security
 

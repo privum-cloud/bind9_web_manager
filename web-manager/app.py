@@ -143,7 +143,7 @@ def create_app():
             # MODIFIED version, point 'source' at your own published sources.
             'license': 'AGPL-3.0-or-later',
             'source': os.environ.get(
-                'SOURCE_URL', 'https://gitlab.com/privum_public/dns_manager'
+                'SOURCE_URL', 'https://github.com/privum-cloud/bind9_web_manager'
             ),
             'endpoints': {
                 'auth': '/api/auth',
