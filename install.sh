@@ -14,9 +14,11 @@
 set -e
 
 # Version and URLs
-VERSION="2.0.0"
+# Renamed from VERSION: detect_distro() sources /etc/os-release, which defines
+# its own VERSION ("24.04.5 LTS (Noble Numbat)") and silently clobbered ours.
+APP_VERSION="2.0.0"
 REPO_URL="https://github.com/privum-cloud/bind9_web_manager.git"
-RELEASE_URL="https://github.com/privum-cloud/bind9_web_manager/archive/refs/tags/v${VERSION}.tar.gz"
+RELEASE_URL="https://github.com/privum-cloud/bind9_web_manager/archive/refs/tags/v${APP_VERSION}.tar.gz"
 RAW_URL="https://raw.githubusercontent.com/privum-cloud/bind9_web_manager/main"
 
 # Colors
@@ -79,7 +81,7 @@ log_error() {
 }
 
 show_usage() {
-    echo "PRIVUM DNS Manager - Installation Script v${VERSION}"
+    echo "PRIVUM DNS Manager - Installation Script v${APP_VERSION}"
     echo ""
     echo "Usage:"
     echo "  Master server:"
@@ -221,7 +223,7 @@ generate_admin_password() {
 #===============================================================================
 
 download_source() {
-    log_info "Downloading PRIVUM DNS Manager v${VERSION}..."
+    log_info "Downloading PRIVUM DNS Manager v${APP_VERSION}..."
 
     mkdir -p "$TEMP_DIR"
     cd "$TEMP_DIR"
@@ -230,7 +232,7 @@ download_source() {
     if curl -fsSL "$RELEASE_URL" -o dns-manager.tar.gz 2>/dev/null; then
         tar -xzf dns-manager.tar.gz --strip-components=1
         rm -f dns-manager.tar.gz
-        log_success "Downloaded release v${VERSION}"
+        log_success "Downloaded release v${APP_VERSION}"
     else
         # Fallback: clone from git
         log_info "Downloading from git repository..."
