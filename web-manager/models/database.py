@@ -90,8 +90,8 @@ def seed_initial_data():
     default_settings = [
         ('dns_default_ttl', 3600, 'TTL padrão para novos registros'),
         ('dns_default_refresh', 3600, 'Refresh padrão para SOA'),
-        ('dns_default_retry', 7200, 'Retry padrão para SOA'),
-        ('dns_default_expire', 3600000, 'Expire padrão para SOA'),
+        ('dns_default_retry', 1800, 'Retry padrão para SOA'),
+        ('dns_default_expire', 604800, 'Expire padrão para SOA'),
         ('dns_default_minimum', 86400, 'Minimum padrão para SOA'),
         ('session_timeout', 30, 'Timeout de sessão em minutos'),
         ('max_login_attempts', 5, 'Tentativas máximas de login'),

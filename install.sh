@@ -33,6 +33,7 @@ NC='\033[0m'
 MODE=""
 MASTER_IP=""
 MASTER_TOKEN=""
+RESET_BIND_CONFIG=""
 
 # Configuration
 INSTALL_DIR="/opt/dns-manager"
@@ -108,6 +109,10 @@ show_usage() {
     echo "  --allow-recursion=<LIST>"
     echo "                        Who may use this server as a resolver"
     echo "                        (default: localhost; localnets)"
+    echo "  --reset-bind-config   Rebuild named.conf.local from the template,"
+    echo "                        DISCARDING the zones declared in it (a backup"
+    echo "                        is kept). Without this, re-running the installer"
+    echo "                        leaves existing zone declarations alone."
     echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
@@ -158,6 +163,9 @@ parse_arguments() {
                 ;;
             --allow-recursion=*)
                 ALLOW_RECURSION="${arg#*=}"
+                ;;
+            --reset-bind-config)
+                RESET_BIND_CONFIG="yes"
                 ;;
             --help|-h)
                 show_usage
@@ -361,9 +369,35 @@ configure_bind_master() {
             "${TEMP_DIR}/configs/bind/named.conf.options.master" > "${BIND_CONFIG_DIR}/named.conf.options"
     fi
 
+    # named.conf.local carries the zone declarations the API writes at runtime, so
+    # it is state rather than installer output. Rendering the template over it --
+    # which is what re-running the installer used to do -- left every zone file on
+    # disk but dropped the zones from BIND and from the API, which enumerates them
+    # out of this file. So keep it when it is already ours; --reset-bind-config
+    # forces a rebuild and keeps a timestamped backup.
+    #
+    # The test is whether the file carries our header, not merely whether it
+    # exists: the bind9 package ships its own commented named.conf.local, which a
+    # first install has to replace or there would be no controls block, no rndc
+    # key include and no "slaves" ACL.
+    #
+    # named.conf.options above is deliberately regenerated: that one really is
+    # installer output, and an upgrade is how a host picks up new settings there.
     NAMED_CONF_LOCAL="${BIND_CONFIG_DIR}/named.conf.local"
-    sed "s|{{RNDC_KEY_PATH}}|${RNDC_KEY_PATH}|g" \
-        "${TEMP_DIR}/configs/bind/named.conf.local.master.template" > "$NAMED_CONF_LOCAL"
+    if grep -q "managed by DNS Manager" "$NAMED_CONF_LOCAL" 2>/dev/null \
+       && [ "$RESET_BIND_CONFIG" != "yes" ]; then
+        EXISTING_ZONES=$(grep -cE '^[[:space:]]*zone[[:space:]]+"' "$NAMED_CONF_LOCAL" || true)
+        log_info "Keeping existing $NAMED_CONF_LOCAL (${EXISTING_ZONES} zone(s) declared)"
+        log_info "Pass --reset-bind-config to rebuild it from the template instead"
+    else
+        if [ -s "$NAMED_CONF_LOCAL" ]; then
+            NAMED_CONF_LOCAL_BACKUP="${NAMED_CONF_LOCAL}.bak-$(date +%Y%m%d-%H%M%S)"
+            cp -a "$NAMED_CONF_LOCAL" "$NAMED_CONF_LOCAL_BACKUP"
+            log_warn "Replacing $NAMED_CONF_LOCAL; previous version kept at $NAMED_CONF_LOCAL_BACKUP"
+        fi
+        sed "s|{{RNDC_KEY_PATH}}|${RNDC_KEY_PATH}|g" \
+            "${TEMP_DIR}/configs/bind/named.conf.local.master.template" > "$NAMED_CONF_LOCAL"
+    fi
 
     chown root:${BIND_GROUP} "${BIND_CONFIG_DIR}/named.conf.options"
     chmod 644 "${BIND_CONFIG_DIR}/named.conf.options"
