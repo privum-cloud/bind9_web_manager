@@ -348,6 +348,21 @@ class DNSService:
         content = '\n'.join(new_lines)
         return self.update_zone_content(zone_name, content)
 
+    def _also_notify_statement(self) -> str:
+        """`also-notify` clause listing the registered slaves.
+
+        BIND builds a zone's NOTIFY target set from its NS RRset and drops the
+        server named in the SOA MNAME. Zones created here carry a single NS which
+        *is* the MNAME, so the target set comes out empty and the master notifies
+        nobody -- slaves then only converge on SOA refresh. `also-notify` takes
+        addresses rather than an ACL name, so the "slaves" ACL cannot be reused.
+        """
+        from models import Slave
+        ips = [s.ip_address for s in Slave.get_active()]
+        if not ips:
+            return 'also-notify { };'
+        return 'also-notify { %s };' % ' '.join('%s;' % ip for ip in ips)
+
     def create_zone(self, zone_name: str, nameserver_ip: str, admin_email: str = None) -> Tuple[bool, str]:
         """Create a new DNS zone"""
         # Check if zone already exists
@@ -398,6 +413,7 @@ zone "{zone_name}" {{
     allow-transfer {{ slaves; }};
     allow-update {{ none; }};
     notify yes;
+    {self._also_notify_statement()}
 }};
 '''
             with open(self.named_conf_local, 'a') as f:
@@ -671,6 +687,7 @@ zone "{zone_name}" {{
     allow-transfer {{ slaves; }};
     allow-update {{ none; }};
     notify yes;
+    {self._also_notify_statement()}
 }};
 '''
             with open(self.named_conf_local, 'a') as f:

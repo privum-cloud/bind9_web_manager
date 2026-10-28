@@ -4,8 +4,15 @@
 options {
     directory "/var/cache/bind";
 
-    // Disable recursion - authoritative only
-    recursion no;
+    // Resolver for internal clients, while still authoritative for the zones
+    // declared in named.conf.local. Recursion is restricted on purpose: a
+    // resolver open to the internet is a DNS amplification reflector.
+    recursion yes;
+    allow-recursion { {{ALLOW_RECURSION}} };
+
+    // Everything outside the local zones is resolved through these.
+    forwarders { {{FORWARDERS}} };
+    forward only;
 
     // Allow queries from anywhere
     allow-query { any; };

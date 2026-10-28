@@ -42,6 +42,14 @@ WEB_DIR="/var/www/dns-manager"
 SERVICE_USER="dns-manager"
 TEMP_DIR="/tmp/dns-manager-install"
 
+# BIND resolver behaviour. These servers answer authoritatively for their own
+# zones and forward everything else, so internal clients can point at them as
+# their only resolver. Recursion is NOT opened to the world on purpose: a public
+# open resolver is a DNS amplification reflector. "localnets" covers the directly
+# attached networks; use --allow-recursion to add a routed VPN subnet.
+FORWARDERS="1.1.1.1; 1.0.0.1;"
+ALLOW_RECURSION="localhost; localnets;"
+
 #===============================================================================
 # Helper Functions
 #===============================================================================
@@ -95,6 +103,11 @@ show_usage() {
     echo "  --slave               Install as slave server (BIND9 only)"
     echo "  --master-ip=<IP>      Master server IP (required for slave)"
     echo "  --token=<TOKEN>       Integration token from master (required for slave)"
+    echo "  --forwarders=<LIST>   Upstream resolvers for public names"
+    echo "                        (default: 1.1.1.1; 1.0.0.1 -- Cloudflare)"
+    echo "  --allow-recursion=<LIST>"
+    echo "                        Who may use this server as a resolver"
+    echo "                        (default: localhost; localnets)"
     echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
@@ -109,6 +122,16 @@ check_root() {
         log_error "This script must be run as root (use sudo)"
         exit 1
     fi
+}
+
+# Normalise a BIND address list so every entry ends with ';'. Accepts commas,
+# semicolons or spaces, so --forwarders="9.9.9.9, 149.112.112.112" also works.
+normalize_addr_list() {
+    local out="" item
+    for item in $(echo "$1" | tr ',;' '  '); do
+        out="${out}${item}; "
+    done
+    echo "${out% }"
 }
 
 parse_arguments() {
@@ -129,6 +152,12 @@ parse_arguments() {
                 ;;
             --token=*)
                 MASTER_TOKEN="${arg#*=}"
+                ;;
+            --forwarders=*)
+                FORWARDERS="${arg#*=}"
+                ;;
+            --allow-recursion=*)
+                ALLOW_RECURSION="${arg#*=}"
                 ;;
             --help|-h)
                 show_usage
@@ -156,6 +185,9 @@ parse_arguments() {
             exit 1
         fi
     fi
+
+    FORWARDERS="$(normalize_addr_list "$FORWARDERS")"
+    ALLOW_RECURSION="$(normalize_addr_list "$ALLOW_RECURSION")"
 }
 
 detect_distro() {
@@ -319,10 +351,14 @@ configure_bind_master() {
 
     # Copy configuration files
     if [ "$DISTRO_FAMILY" == "rhel" ]; then
-        sed "s|/var/cache/bind|/var/named|g" \
+        sed -e "s|{{ALLOW_RECURSION}}|${ALLOW_RECURSION}|g" \
+            -e "s|{{FORWARDERS}}|${FORWARDERS}|g" \
+            -e "s|/var/cache/bind|/var/named|g" \
             "${TEMP_DIR}/configs/bind/named.conf.options.master" > "${BIND_CONFIG_DIR}/named.conf.options"
     else
-        cp "${TEMP_DIR}/configs/bind/named.conf.options.master" "${BIND_CONFIG_DIR}/named.conf.options"
+        sed -e "s|{{ALLOW_RECURSION}}|${ALLOW_RECURSION}|g" \
+            -e "s|{{FORWARDERS}}|${FORWARDERS}|g" \
+            "${TEMP_DIR}/configs/bind/named.conf.options.master" > "${BIND_CONFIG_DIR}/named.conf.options"
     fi
 
     NAMED_CONF_LOCAL="${BIND_CONFIG_DIR}/named.conf.local"
@@ -405,10 +441,16 @@ install_api() {
 
     SECRET_KEY=$(generate_secret_key)
 
+    # Without this the API falls back to detecting its own address, and an older
+    # fallback of 127.0.0.1 is what put a loopback nameserver A record into every
+    # zone created through the UI.
+    SERVER_IP="${SERVER_IP:-$(hostname -I | awk '{print $1}')}"
+
     cat > "${INSTALL_DIR}/.env" << EOF
 FLASK_ENV=production
 FLASK_SECRET_KEY=${SECRET_KEY}
 DNS_MASTER_HOST=localhost
+DNS_MASTER_IP=${SERVER_IP}
 ZONES_PATH=${BIND_ZONES_DIR}
 RNDC_KEY_PATH=${BIND_CONFIG_DIR}/rndc.key
 NAMED_CONF_LOCAL=${BIND_CONFIG_DIR}/named.conf.local
@@ -739,7 +781,10 @@ configure_bind_slave() {
     cat > "${BIND_CONFIG_DIR}/named.conf.options" << EOF
 options {
     directory "${BIND_CACHE_DIR}";
-    recursion no;
+    recursion yes;
+    allow-recursion { ${ALLOW_RECURSION} };
+    forwarders { ${FORWARDERS} };
+    forward only;
     allow-query { any; };
     allow-transfer { none; };
     notify no;
