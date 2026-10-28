@@ -62,8 +62,8 @@ export default function Settings() {
   const [dnsSettings, setDnsSettings] = useState<DNSSettings>({
     default_ttl: 3600,
     default_refresh: 3600,
-    default_retry: 7200,
-    default_expire: 3600000,
+    default_retry: 1800,
+    default_expire: 604800,
     default_minimum: 86400,
   })
 
