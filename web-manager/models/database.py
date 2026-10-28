@@ -89,7 +89,7 @@ def seed_initial_data():
     # Create default settings if not exist
     default_settings = [
         ('dns_default_ttl', 3600, 'TTL padrão para novos registros'),
-        ('dns_default_refresh', 86400, 'Refresh padrão para SOA'),
+        ('dns_default_refresh', 3600, 'Refresh padrão para SOA'),
         ('dns_default_retry', 7200, 'Retry padrão para SOA'),
         ('dns_default_expire', 3600000, 'Expire padrão para SOA'),
         ('dns_default_minimum', 86400, 'Minimum padrão para SOA'),

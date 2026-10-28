@@ -86,6 +86,26 @@ def validate_secret_key(secret_key):
     return True
 
 
+def _detect_primary_ip():
+    """Best-effort primary IPv4 address of this host.
+
+    DNS_MASTER_IP used to fall back to 127.0.0.1 outside Docker, and that value
+    is written verbatim as the nameserver A record of every zone created through
+    the API -- producing a zone whose only NS points at loopback. connect() on a
+    UDP socket sends no packet, it only resolves which local address would be
+    used to reach the network.
+    """
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        return s.getsockname()[0]
+    except OSError:
+        return '127.0.0.1'
+    finally:
+        s.close()
+
+
 class Config:
     """Base configuration"""
     # Flask
@@ -98,7 +118,7 @@ class Config:
 
     # DNS Settings - Auto-detect paths
     DNS_MASTER_HOST = os.environ.get('DNS_MASTER_HOST', 'localhost' if not IS_DOCKER else 'dns-master')
-    DNS_MASTER_IP = os.environ.get('DNS_MASTER_IP', '127.0.0.1' if not IS_DOCKER else '172.25.0.10')
+    DNS_MASTER_IP = os.environ.get('DNS_MASTER_IP') or ('172.25.0.10' if IS_DOCKER else _detect_primary_ip())
     DNS_SLAVE_HOST = os.environ.get('DNS_SLAVE_HOST', '')
     DNS_SLAVE_IP = os.environ.get('DNS_SLAVE_IP', '' if not IS_DOCKER else '172.25.0.11')
     ZONES_PATH = os.environ.get('ZONES_PATH', BIND_PATHS['zones_dir'])

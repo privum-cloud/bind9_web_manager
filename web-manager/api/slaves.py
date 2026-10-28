@@ -152,7 +152,7 @@ def register_slave():
     token.mark_used(slave_ip)
 
     # Update BIND configuration to allow transfer to this slave
-    update_result = update_bind_allow_transfer()
+    update_result = update_bind_slave_config()
 
     audit_log(
         'slave_registered',
@@ -236,7 +236,7 @@ def delete_slave(current_user, slave_id):
     slave.delete()
 
     # Update BIND configuration
-    update_bind_allow_transfer()
+    update_bind_slave_config()
 
     audit_log(
         'slave_deleted',
@@ -269,7 +269,7 @@ def update_slave_status(current_user, slave_id):
 
     # Update BIND if status changed to/from active
     if (old_status == 'active') != (new_status == 'active'):
-        update_bind_allow_transfer()
+        update_bind_slave_config()
 
     audit_log(
         'slave_status_changed',
@@ -365,9 +365,11 @@ def revoke_token(current_user, token_id):
 # Helper functions
 # ============================================
 
-def update_bind_allow_transfer():
+def update_bind_slave_config():
     """
-    Update BIND configuration to allow zone transfers to active slaves.
+    Sync the master's BIND config with the registered slaves: the "slaves" ACL
+    and allow-transfer (who may pull a zone), plus also-notify (who gets told
+    that a zone changed).
     Returns True if successful, error message otherwise.
     """
     try:
@@ -414,6 +416,29 @@ def update_bind_allow_transfer():
             new_transfer = 'allow-transfer { none; }'
 
         content = re.sub(transfer_pattern, new_transfer, content)
+
+        # Keep also-notify in sync with the registered slaves. notify yes alone
+        # is not enough: BIND takes the NOTIFY targets from the zone's NS RRset
+        # minus the SOA MNAME, and our zones have a single NS which is that
+        # MNAME, so nothing would ever be notified and slaves would only
+        # converge on SOA refresh. Addresses only -- an ACL name is not accepted
+        # here, which is why the "slaves" ACL above cannot be reused.
+        if slave_ips and slave_ips[0] != 'none':
+            new_also_notify = 'also-notify { %s }' % ' '.join('%s;' % ip for ip in slave_ips)
+        else:
+            new_also_notify = 'also-notify { }'
+
+        also_notify_pattern = r'also-notify\s*\{[^}]*\}'
+
+        if re.search(also_notify_pattern, content):
+            content = re.sub(also_notify_pattern, new_also_notify, content)
+        else:
+            # Not there yet: add it to each zone block, after its allow-transfer.
+            content = re.sub(
+                r'(allow-transfer\s*\{[^}]*\};)',
+                lambda m: '%s\n    %s;' % (m.group(1), new_also_notify),
+                content
+            )
 
         # Write updated config
         with open(named_conf_local, 'w') as f:
